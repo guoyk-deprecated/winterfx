@@ -7,8 +7,10 @@ var (
 	Module = fx.Module(
 		"winterfx",
 		fx.Provide(
+			LoadFlagSetArgs,
 			CreateFlagSet,
 		),
 		fx.Invoke(ParseFlagSet),
+		fx.Invoke(SetupOTEL),
 	)
 )

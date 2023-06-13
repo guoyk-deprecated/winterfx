@@ -17,12 +17,11 @@ func TestCreateFlagSet(t *testing.T) {
 }
 
 func TestParseFlagSet(t *testing.T) {
-	testArgs = []string{"--ignore", "world"}
 	fset := CreateFlagSet()
 	_ = fset.String("ignore", "", "test")
 	val := fset.String("hello", "", "test")
 	require.NoError(t, os.Setenv("HELLO", "WORLD"))
-	require.NoError(t, ParseFlagSet(ParseFlagSetOptions{FlagSet: fset}))
+	require.NoError(t, ParseFlagSet(ParseFlagSetOptions{FlagSet: fset, Args: FlagSetArgs{"--ignore", "world"}}))
 	require.Equal(t, "WORLD", *val)
 }
 
@@ -31,12 +30,14 @@ func TestWrapFlagSetDecoderFunc(t *testing.T) {
 		Hello string
 	}
 
-	testArgs = []string{"--hello", "world"}
-
 	var v string
 
 	app := fx.New(
+		fx.Decorate(func() FlagSetArgs {
+			return FlagSetArgs{"--hello", "world"}
+		}),
 		fx.Provide(
+			LoadFlagSetArgs,
 			CreateFlagSet,
 			WrapFlagSetDecoderFunc(func(fset *flag.FlagSet) *Params {
 				p := &Params{}

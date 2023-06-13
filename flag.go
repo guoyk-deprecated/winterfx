@@ -38,25 +38,26 @@ func WrapFlagSetDecoderFunc[T any](fn func(fset *flag.FlagSet) T) func(fset *fla
 	}
 }
 
+type FlagSetArgs []string
+
+// LoadFlagSetArgs loads the flag set args
+func LoadFlagSetArgs() FlagSetArgs {
+	return os.Args[1:]
+}
+
 // ParseFlagSetOptions is the options for parsing flag set
 type ParseFlagSetOptions struct {
 	fx.In
 	JointPoints []FlagSetJointPoint `group:"flagsetjointpoint"`
 
 	FlagSet *flag.FlagSet
-}
 
-var (
-	testArgs []string
-)
+	Args FlagSetArgs
+}
 
 // ParseFlagSet parses the flag set
 func ParseFlagSet(opts ParseFlagSetOptions) error {
-	args := os.Args[1:]
-	if len(testArgs) != 0 {
-		args = testArgs
-	}
-	return ff.Parse(opts.FlagSet, args,
+	return ff.Parse(opts.FlagSet, opts.Args,
 		ff.WithEnvVars(),
 		ff.WithConfigFileFlag("conf"),
 		ff.WithConfigFileParser(ff.PlainParser),
