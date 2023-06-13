@@ -10,8 +10,8 @@ import (
 // FlagSetJointPoint is a joint point for ensuring all decoder functions are called before parsing flagset
 type FlagSetJointPoint struct{}
 
-// CreateFlagSet creates a new flag set
-func CreateFlagSet() *flag.FlagSet {
+// NewFlagSet creates a new flag set
+func NewFlagSet() *flag.FlagSet {
 	name, _ := os.Executable()
 	if name == "" {
 		name = os.Args[0]
@@ -28,8 +28,8 @@ type FlagSetDecodeResult[T any] struct {
 	Value T
 }
 
-// WrapFlagSetDecoderFunc wraps a flag set decoder function with joint points
-func WrapFlagSetDecoderFunc[T any](fn func(fset *flag.FlagSet) T) func(fset *flag.FlagSet) FlagSetDecodeResult[T] {
+// AsFlagSetDecoderFunc wraps a flag set decoder function with joint points
+func AsFlagSetDecoderFunc[T any](fn func(fset *flag.FlagSet) T) func(fset *flag.FlagSet) FlagSetDecodeResult[T] {
 	return func(fset *flag.FlagSet) FlagSetDecodeResult[T] {
 		return FlagSetDecodeResult[T]{
 			FlagSetJointPoint: FlagSetJointPoint{},

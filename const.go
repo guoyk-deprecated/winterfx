@@ -8,8 +8,4 @@ const (
 
 	ContentTypeApplicationJSONUTF8 = "application/json; charset=utf-8"
 	ContentTypeTextPlainUTF8       = "text/plain; charset=utf-8"
-
-	DefaultReadinessPath = "/debug/ready"
-	DefaultLivenessPath  = "/debug/alive"
-	DefaultMetricsPath   = "/debug/metrics"
 )

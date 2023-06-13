@@ -90,7 +90,7 @@ type winterContext struct {
 	recvOnce *sync.Once
 	sendOnce *sync.Once
 
-	responseLogging bool
+	loggingResponse bool
 }
 
 func (c *winterContext) Deadline() (deadline time.Time, ok bool) {
@@ -136,7 +136,7 @@ func (c *winterContext) receive() {
 }
 
 func (c *winterContext) send() {
-	if c.responseLogging {
+	if c.loggingResponse {
 		var traceID string
 		if sp := trace.SpanFromContext(c); sp != nil {
 			traceID = sp.SpanContext().TraceID().String()
@@ -188,7 +188,7 @@ func (c *winterContext) Perform() {
 		}
 		c.Code(halt.StatusCodeFromError(e))
 		c.JSON(halt.BodyFromError(e))
-		c.responseLogging = true
+		c.loggingResponse = true
 	}
 	c.sendOnce.Do(c.send)
 }

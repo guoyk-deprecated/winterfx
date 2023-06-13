@@ -17,7 +17,7 @@ func TestModule(t *testing.T) {
 			return FlagSetArgs{"--hello", "world"}
 		}),
 		fx.Provide(
-			WrapFlagSetDecoderFunc(func(fset *flag.FlagSet) *Params {
+			AsFlagSetDecoderFunc(func(fset *flag.FlagSet) *Params {
 				p := &Params{}
 				fset.StringVar(&p.Hello, "hello", "", "")
 				return p

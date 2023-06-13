@@ -8,7 +8,9 @@ var (
 		"winterfx",
 		fx.Provide(
 			LoadFlagSetArgs,
-			CreateFlagSet,
+			NewFlagSet,
+			AsFlagSetDecoderFunc(ParamsFromFlagSet),
+			New,
 		),
 		fx.Invoke(ParseFlagSet),
 		fx.Invoke(SetupOTEL),
