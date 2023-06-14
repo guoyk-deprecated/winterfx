@@ -14,7 +14,7 @@ func TestHalt(t *testing.T) {
 			err = recover().(error)
 		}()
 
-		HaltString(
+		String(
 			"test",
 			WithStatusCode(http.StatusTeapot),
 			WithExtra("aaa", "bbb"),
@@ -24,7 +24,7 @@ func TestHalt(t *testing.T) {
 			}),
 		)
 	}()
-	m := BodyFromError(err)
+	m := ExtrasFromError(err)
 	require.Equal(t, http.StatusTeapot, StatusCodeFromError(err))
 	require.Equal(t, map[string]any{"message": "test", "aaa": "bbb", "ccc": "ddd", "eee": "fff"}, m)
 
@@ -33,7 +33,7 @@ func TestHalt(t *testing.T) {
 			err = recover().(error)
 		}()
 
-		HaltString(
+		String(
 			"test",
 			WithBadRequest(),
 			WithExtras(map[string]any{
@@ -44,7 +44,7 @@ func TestHalt(t *testing.T) {
 			WithMessage("test2"),
 		)
 	}()
-	m = BodyFromError(err)
+	m = ExtrasFromError(err)
 	require.Equal(t, http.StatusBadRequest, StatusCodeFromError(err))
 	require.Equal(t, map[string]any{"message": "test2", "aaa": "bbb", "ccc": "ddd", "eee": "fff"}, m)
 }
@@ -57,7 +57,7 @@ func TestPanicError(t *testing.T) {
 		}()
 		panic(errors.New("TEST1"))
 	}()
-	m := BodyFromError(err)
+	m := ExtrasFromError(err)
 	require.Equal(t, http.StatusInternalServerError, StatusCodeFromError(err))
 	require.Equal(t, map[string]any{"message": "TEST1"}, m)
 }

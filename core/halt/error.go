@@ -101,14 +101,14 @@ func New(err error, opts ...Option) error {
 	return he
 }
 
-// Halt panic with [New]
-func Halt(err error, opts ...Option) {
+// Error panic with [New]
+func Error(err error, opts ...Option) {
 	panic(New(err, opts...))
 }
 
-// HaltString panic with [New] and [errors.New]
-func HaltString(s string, opts ...Option) {
-	Halt(errors.New(s), opts...)
+// String panic with [New] and [errors.New]
+func String(s string, opts ...Option) {
+	panic(New(errors.New(s), opts...))
 }
 
 // StatusCodeFromError get status code from previous created [HaltError]
@@ -129,8 +129,8 @@ func StatusCodeFromError(err error) int {
 	return http.StatusInternalServerError
 }
 
-// BodyFromError extract extras from previous created [HaltError]
-func BodyFromError(err error) (m map[string]any) {
+// ExtrasFromError extract extras from previous created [HaltError]
+func ExtrasFromError(err error) (m map[string]any) {
 	for {
 		if err == nil {
 			return

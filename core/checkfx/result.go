@@ -1,22 +1,22 @@
-package winterfx
+package checkfx
 
 import "strings"
 
-type CheckResult interface {
+type Result interface {
 	Collect(name string, err error)
 	Result() (s string, failed bool)
 }
 
-type checkResult struct {
+type result struct {
 	failed bool
 	sb     *strings.Builder
 }
 
-func NewCheckResult() CheckResult {
-	return &checkResult{sb: &strings.Builder{}}
+func NewResult() Result {
+	return &result{sb: &strings.Builder{}}
 }
 
-func (c *checkResult) Collect(name string, err error) {
+func (c *result) Collect(name string, err error) {
 	if c.sb.Len() > 0 {
 		c.sb.WriteString("\n")
 	}
@@ -30,7 +30,7 @@ func (c *checkResult) Collect(name string, err error) {
 	}
 }
 
-func (c *checkResult) Result() (s string, failed bool) {
+func (c *result) Result() (s string, failed bool) {
 	if c.sb.Len() == 0 {
 		s = "OK"
 	} else {

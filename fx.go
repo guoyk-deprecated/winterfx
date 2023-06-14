@@ -1,18 +1,20 @@
 package winterfx
 
-import "go.uber.org/fx"
+import (
+	"github.com/guoyk93/winterfx/core/checkfx"
+	"github.com/guoyk93/winterfx/core/flagfx"
+	"go.uber.org/fx"
+)
 
 var (
 	// Module is the fx module for winterfx
 	Module = fx.Module(
 		"winterfx",
+		flagfx.Module,
+		checkfx.Module,
 		fx.Provide(
-			LoadFlagSetArgs,
-			NewFlagSet,
-			AsFlagSetDecoderFunc(ParamsFromFlagSet),
 			New,
 		),
-		fx.Invoke(ParseFlagSet),
 		fx.Invoke(SetupOTEL),
 	)
 )

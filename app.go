@@ -60,9 +60,8 @@ func (a *app) serveReadiness(rw http.ResponseWriter, req *http.Request) {
 	c := newContext(rw, req)
 	defer c.Perform()
 
-	cr := NewCheckResult()
 	//TODO: add readiness check
-	s, failed := cr.Result()
+	s, failed := "OK", false
 
 	status := http.StatusOK
 	if failed {

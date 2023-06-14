@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/guoyk93/rg"
-	"github.com/guoyk93/winterfx/halt"
+	"github.com/guoyk93/winterfx/core/halt"
 	"go.opentelemetry.io/otel/trace"
 	"log"
 	"mime/multipart"
@@ -129,7 +129,7 @@ func (c *winterContext) receive() {
 	var m = map[string]any{}
 	var f = map[string][]*multipart.FileHeader{}
 	if err := extractRequest(m, f, c.req); err != nil {
-		halt.Halt(err, halt.WithStatusCode(http.StatusBadRequest))
+		halt.Error(err, halt.WithStatusCode(http.StatusBadRequest))
 	}
 	c.buf = rg.Must(json.Marshal(m))
 	c.files = f
@@ -187,7 +187,7 @@ func (c *winterContext) Perform() {
 			e = fmt.Errorf("panic: %v", r)
 		}
 		c.Code(halt.StatusCodeFromError(e))
-		c.JSON(halt.BodyFromError(e))
+		c.JSON(halt.ExtrasFromError(e))
 		c.loggingResponse = true
 	}
 	c.sendOnce.Do(c.send)
