@@ -1,4 +1,4 @@
-package checkfx
+package probefx
 
 import (
 	"context"
@@ -11,28 +11,37 @@ import (
 
 func TestModule(t *testing.T) {
 	badRedis := true
-	var m Manager
+	var m Probe
+
+	type testResource struct {
+	}
+
+	tr := &testResource{}
 
 	fx.New(
 		flagfx.Module,
 		Module,
+
 		fx.Provide(
-			AsCheckerBuilder(func() Checker {
-				return NewChecker("redis", func(ctx context.Context) error {
+			func() *testResource {
+				return tr
+			},
+			AsCheckerProvider(func(i *testResource) (string, CheckerFunc) {
+				return "redis", func(ctx context.Context) error {
 					if badRedis {
 						return errors.New("test")
 					} else {
 						return nil
 					}
-				})
+				}
 			}),
 		),
 		fx.Decorate(func() flagfx.Args {
 			return []string{
-				"--checker.cascade", "2",
+				"--probe.readiness.cascade", "2",
 			}
 		}),
-		fx.Invoke(func(_m Manager) {
+		fx.Invoke(func(_m Probe) {
 			m = _m
 		}),
 	)

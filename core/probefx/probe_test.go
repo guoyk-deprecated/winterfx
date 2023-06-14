@@ -1,4 +1,4 @@
-package checkfx
+package probefx
 
 import (
 	"context"
@@ -9,20 +9,26 @@ import (
 
 func TestNewManager(t *testing.T) {
 	badRedis := true
-	m := NewManager(ManagerOptions{
-		Params: &ManagerParams{
+	m := New(Options{
+		Params: &Params{
 			Cascade: 2,
 		},
-		Checkers: []Checker{
-			NewChecker("redis", func(ctx context.Context) error {
-				if badRedis {
-					return errors.New("test")
-				}
-				return nil
-			}),
-			NewChecker("mysql", func(ctx context.Context) error {
-				return nil
-			}),
+		Checkers: []checker{
+			{
+				name: "redis",
+				fn: func(ctx context.Context) error {
+					if badRedis {
+						return errors.New("test")
+					}
+					return nil
+				},
+			},
+			{
+				name: "mysql",
+				fn: func(ctx context.Context) error {
+					return nil
+				},
+			},
 		},
 	})
 	require.True(t, m.CheckLiveness())

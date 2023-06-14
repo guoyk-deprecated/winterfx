@@ -1,4 +1,4 @@
-package winterfx
+package routerfx
 
 import (
 	"encoding/json"
@@ -10,25 +10,29 @@ import (
 	"strings"
 )
 
-func flattenSingleSlice[T any](s []T) any {
-	if len(s) == 1 {
-		return s[0]
+func extractStringSlice(m map[string]any, key string, pfx string, vs []string) {
+	var v any
+	if len(vs) == 1 {
+		v = vs[0]
+	} else {
+		v = vs
 	}
-	return s
+	m[key] = v
+	m[key+"_array"] = vs
+	m[pfx+key] = v
+	m[pfx+key+"_array"] = vs
 }
 
 func extractRequest(m map[string]any, f map[string][]*multipart.FileHeader, req *http.Request) (err error) {
 	// header
 	for k, vs := range req.Header {
-		k = "header_" + strings.ToLower(strings.ReplaceAll(k, "-", "_"))
-		m[k] = flattenSingleSlice(vs)
+		k = strings.ToLower(strings.ReplaceAll(k, "-", "_"))
+		extractStringSlice(m, k, "header_", vs)
 	}
 
 	// query
 	for k, vs := range req.URL.Query() {
-		v := flattenSingleSlice(vs)
-		m[k] = v
-		m["query_"+k] = v
+		extractStringSlice(m, k, "query_", vs)
 	}
 
 	// body
@@ -63,14 +67,14 @@ func extractRequest(m map[string]any, f map[string][]*multipart.FileHeader, req 
 			return
 		}
 		for k, vs := range q {
-			m[k] = flattenSingleSlice(vs)
+			extractStringSlice(m, k, "form_", vs)
 		}
 	case ContentTypeMultipart:
 		if err = req.ParseMultipartForm(1024 * 1024 * 10); err != nil {
 			return
 		}
-		for k, v := range req.MultipartForm.Value {
-			m[k] = flattenSingleSlice(v)
+		for k, vs := range req.MultipartForm.Value {
+			extractStringSlice(m, k, "form_", vs)
 		}
 		for k, v := range req.MultipartForm.File {
 			f[k] = v

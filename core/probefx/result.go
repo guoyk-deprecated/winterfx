@@ -1,9 +1,10 @@
-package checkfx
+package probefx
 
 import "strings"
 
 type Result interface {
 	Collect(name string, err error)
+
 	Result() (s string, failed bool)
 }
 

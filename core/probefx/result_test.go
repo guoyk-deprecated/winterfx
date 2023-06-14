@@ -1,4 +1,4 @@
-package checkfx
+package probefx
 
 import (
 	"errors"

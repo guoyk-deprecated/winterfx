@@ -1,91 +1,56 @@
 package winterfx
 
 import (
+	"github.com/guoyk93/winterfx/core/probefx"
+	"github.com/guoyk93/winterfx/core/routerfx"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.uber.org/fx"
 	"net/http"
-	"net/http/pprof"
+	_ "net/http/pprof"
 	"strings"
-	"sync/atomic"
 )
-
-// HandlerFunc handler func with [Context] as argument
-type HandlerFunc func(c Context)
 
 // App the main interface of [summer]
 type App interface {
 	// Handler inherit [http.Handler]
 	http.Handler
-
-	// HandleFunc register an action function with given path pattern
-	//
-	// This function is similar with [http.ServeMux.HandleFunc]
-	HandleFunc(pattern string, fn HandlerFunc)
 }
 
 type app struct {
-	Params
+	*Params
 
-	hMain *http.ServeMux
+	probe  probefx.Probe
+	router routerfx.Router
 
 	hProm http.Handler
-	hProf http.Handler
-
-	cc chan struct{}
-
-	failed int64
-}
-
-func (a *app) HandleFunc(pattern string, fn HandlerFunc) {
-	a.hMain.Handle(
-		pattern,
-		otelhttp.NewHandler(
-			otelhttp.WithRouteTag(
-				pattern,
-				http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-					c := newContext(rw, req)
-					c.loggingResponse = a.LoggingResponse
-					func() {
-						defer c.Perform()
-						fn(c)
-					}()
-				}),
-			),
-			pattern,
-		),
-	)
 }
 
 func (a *app) serveReadiness(rw http.ResponseWriter, req *http.Request) {
-	c := newContext(rw, req)
+	c := routerfx.NewContext(rw, req)
 	defer c.Perform()
 
-	//TODO: add readiness check
-	s, failed := "OK", false
+	s, failed := a.probe.CheckReadiness(c)
 
 	status := http.StatusOK
 	if failed {
-		atomic.AddInt64(&a.failed, 1)
 		status = http.StatusInternalServerError
-	} else {
-		atomic.StoreInt64(&a.failed, 0)
 	}
 
-	c.Code(status)
 	c.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+	c.Code(status)
 	c.Text(s)
 }
 
 func (a *app) serveLiveness(rw http.ResponseWriter, req *http.Request) {
-	c := newContext(rw, req)
+	c := routerfx.NewContext(rw, req)
 	defer c.Perform()
 
 	c.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
-	if a.ReadinessCascade > 0 &&
-		atomic.LoadInt64(&a.failed) > a.ReadinessCascade {
+	if a.probe.CheckLiveness() {
 		c.Code(http.StatusInternalServerError)
-		c.Text("CASCADED")
+		c.Text("CASCADED FAILURE")
 	} else {
 		c.Code(http.StatusOK)
 		c.Text("OK")
@@ -94,61 +59,45 @@ func (a *app) serveLiveness(rw http.ResponseWriter, req *http.Request) {
 
 func (a *app) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// alive, ready, metrics
-	if req.URL.Path == a.ReadinessPath {
+	if req.URL.Path == a.PathReadiness {
 		// support readinessPath == livenessPath
 		a.serveReadiness(rw, req)
 		return
-	} else if req.URL.Path == a.LivenessPath {
+	} else if req.URL.Path == a.PathLiveness {
 		a.serveLiveness(rw, req)
 		return
-	} else if req.URL.Path == a.MetricsPath {
+	} else if req.URL.Path == a.PathMetrics {
 		a.hProm.ServeHTTP(rw, req)
 		return
 	}
 
 	// pprof
 	if strings.HasPrefix(req.URL.Path, "/debug/pprof") {
-		a.hProf.ServeHTTP(rw, req)
+		http.DefaultServeMux.ServeHTTP(rw, req)
 		return
 	}
 
-	// concurrency
-	if a.cc != nil {
-		<-a.cc
-		defer func() {
-			a.cc <- struct{}{}
-		}()
-	}
-
 	// serve with main handler
-	a.hMain.ServeHTTP(rw, req)
+	a.router.ServeHTTP(rw, req)
+}
+
+type Options struct {
+	fx.In
+
+	*Params
+
+	probefx.Probe
+	routerfx.Router
 }
 
 // New create an [App] with [Option]
 func New(opts Options) App {
 	a := &app{
 		Params: opts.Params,
+		probe:  opts.Probe,
+		router: opts.Router,
 	}
 
-	// create handlers
-	{
-		a.hMain = &http.ServeMux{}
-		a.hProm = promhttp.Handler()
-		m := &http.ServeMux{}
-		m.HandleFunc("/debug/pprof/", pprof.Index)
-		m.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		m.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		m.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		m.HandleFunc("/debug/pprof/trace", pprof.Trace)
-		a.hProf = m
-	}
-
-	// create concurrency controller
-	if a.Concurrency > 0 {
-		a.cc = make(chan struct{}, a.Concurrency)
-		for i := 0; i < a.Concurrency; i++ {
-			a.cc <- struct{}{}
-		}
-	}
+	a.hProm = promhttp.Handler()
 	return a
 }

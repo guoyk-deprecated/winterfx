@@ -1,4 +1,4 @@
-package winterfx
+package routerfx
 
 import (
 	"context"
@@ -91,6 +91,7 @@ type winterContext struct {
 	sendOnce *sync.Once
 
 	loggingResponse bool
+	loggingRequest  bool
 }
 
 func (c *winterContext) Deadline() (deadline time.Time, ok bool) {
@@ -201,4 +202,8 @@ func newContext(rw http.ResponseWriter, req *http.Request) *winterContext {
 		recvOnce: &sync.Once{},
 		sendOnce: &sync.Once{},
 	}
+}
+
+func NewContext(rw http.ResponseWriter, req *http.Request) Context {
+	return newContext(rw, req)
 }

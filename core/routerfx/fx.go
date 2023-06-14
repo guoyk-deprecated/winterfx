@@ -1,4 +1,4 @@
-package checkfx
+package routerfx
 
 import (
 	"github.com/guoyk93/winterfx/core/flagfx"
@@ -6,9 +6,9 @@ import (
 )
 
 var Module = fx.Module(
-	"winterfx_core_checkfx",
+	"winterfx_core_routefx",
 	fx.Provide(
-		flagfx.AsDecoderFunc(DecodeManagerParams),
-		NewManager,
+		New,
+		flagfx.AsDecoderFunc(DecodeParams),
 	),
 )

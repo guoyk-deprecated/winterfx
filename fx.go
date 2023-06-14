@@ -1,8 +1,9 @@
 package winterfx
 
 import (
-	"github.com/guoyk93/winterfx/core/checkfx"
 	"github.com/guoyk93/winterfx/core/flagfx"
+	"github.com/guoyk93/winterfx/core/otelfx"
+	"github.com/guoyk93/winterfx/core/probefx"
 	"go.uber.org/fx"
 )
 
@@ -11,10 +12,11 @@ var (
 	Module = fx.Module(
 		"winterfx",
 		flagfx.Module,
-		checkfx.Module,
+		probefx.Module,
+		otelfx.Module,
 		fx.Provide(
+			flagfx.AsDecoderFunc(DecodeParams),
 			New,
 		),
-		fx.Invoke(SetupOTEL),
 	)
 )

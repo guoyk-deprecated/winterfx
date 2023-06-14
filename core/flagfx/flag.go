@@ -10,6 +10,11 @@ import (
 // Args is the command-line arguments
 type Args []string
 
+// OverrideArgs supplies the command-line arguments
+func OverrideArgs(v []string) fx.Option {
+	return fx.Replace(Args(v))
+}
+
 // ArgsFromCommandLine loads the flag set args from command-line arguments
 func ArgsFromCommandLine() Args {
 	return os.Args[1:]
@@ -22,11 +27,11 @@ type DecoderResult[T any] struct {
 	fx.Out
 	JointPoint JointPoint `group:"winterfx_core_flagfx_jointpoints"`
 
-	Value T
+	Value *T
 }
 
 // AsDecoderFunc wraps a flag set decoder function with joint points
-func AsDecoderFunc[T any](fn func(fset *flag.FlagSet) T) func(fset *flag.FlagSet) DecoderResult[T] {
+func AsDecoderFunc[T any](fn func(fset *flag.FlagSet) *T) func(fset *flag.FlagSet) DecoderResult[T] {
 	return func(fset *flag.FlagSet) DecoderResult[T] {
 		return DecoderResult[T]{
 			Value: fn(fset),

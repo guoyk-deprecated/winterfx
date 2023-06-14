@@ -1,4 +1,4 @@
-package winterfx
+package routerfx
 
 const (
 	ContentTypeApplicationJSON = "application/json"

@@ -1,4 +1,4 @@
-package winterfx
+package otelfx
 
 import (
 	"github.com/go-logr/logr"
@@ -11,8 +11,8 @@ import (
 	"net/http"
 )
 
-// SetupOTEL setup opentelemetry
-func SetupOTEL() (err error) {
+// Setup setup opentelemetry
+func Setup() (err error) {
 	// zipkin exporter
 	var ze *zipkin.Exporter
 	if ze, err = zipkin.New("", zipkin.WithLogr(logr.Discard())); err != nil {

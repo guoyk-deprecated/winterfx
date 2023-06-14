@@ -1,4 +1,4 @@
-package winterfx
+package otelfx
 
 import (
 	"github.com/stretchr/testify/require"
@@ -7,6 +7,6 @@ import (
 )
 
 func TestSetupOTEL(t *testing.T) {
-	require.NoError(t, SetupOTEL())
+	require.NoError(t, Setup())
 	_ = otel.GetTracerProvider()
 }
